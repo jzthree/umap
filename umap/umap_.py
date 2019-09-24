@@ -1406,6 +1406,9 @@ class UMAP(BaseEstimator):
         target_weight=0.5,
         transform_seed=42,
         verbose=False,
+        use_nmslib=False,
+        nmslib_params ={'post': 2},
+        nmslib_num_threads = 8
     ):
 
         self.n_neighbors = n_neighbors
@@ -1431,6 +1434,10 @@ class UMAP(BaseEstimator):
         self.target_weight = target_weight
         self.transform_seed = transform_seed
         self.verbose = verbose
+
+        self.use_nmslib = use_nmslib
+        self.nmslib_params = nmslib_params
+        self.nmslib_num_threads = nmslib_num_threads
 
         self.a = a
         self.b = b
@@ -1627,19 +1634,28 @@ class UMAP(BaseEstimator):
         else:
             self._small_data = False
             # Standard case
-            (
-                self._knn_indices,
-                self._knn_dists,
-                self._rp_forest,
-            ) = nearest_neighbors(
-                X,
-                self._n_neighbors,
-                self.metric,
-                self._metric_kwds,
-                self.angular_rp_forest,
-                random_state,
-                self.verbose,
-            )
+            if self.use_nmslib:
+                    import  nmslib
+                    index = nmslib.init(method='hnsw', space=self.metric)
+                    index.addDataPointBatch(X)
+                    index.createIndex(self.nmslib_params, print_progress=False)
+                    neighbors = index.knnQueryBatch(X, k=self._n_neighbors, num_threads=self.nmslib_num_threads)
+                    self._knn_indices = np.vstack([i for i,d in neighbors])
+                    self._knn_dists = np.vstack([d for i,d in neighbors])
+            else:
+                (
+                    self._knn_indices,
+                    self._knn_dists,
+                    self._rp_forest,
+                ) = nearest_neighbors(
+                    X,
+                    self._n_neighbors,
+                    self.metric,
+                    self._metric_kwds,
+                    self.angular_rp_forest,
+                    random_state,
+                    self.verbose,
+                )
 
             self.graph_ = fuzzy_simplicial_set(
                 X,
@@ -1839,6 +1855,9 @@ class UMAP(BaseEstimator):
         X_new : array, shape (n_samples, n_components)
             Embedding of the new data in low-dimensional space.
         """
+        if self.use_nmslib:
+            raise ValueError(
+                "Transform is not yet supported with use_nmslib=True")
         # If we fit just a single instance then error
         if self.embedding_.shape[0] == 1:
             raise ValueError(
