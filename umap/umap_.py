@@ -1693,9 +1693,8 @@ class UMAP(BaseEstimator):
                     "Using precomputed metric; transform will be unavailable for new data"
                 )
             else:
-                raise ValueError(
-                    "Metric is neither callable, "
-                    + "nor a recognised string"
+                warn(
+                    "Using metric without a distance func; transform will be unavailable for new data"
                 )
 
             if self.metric != "precomputed":
