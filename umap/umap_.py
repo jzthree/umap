@@ -1697,7 +1697,7 @@ class UMAP(BaseEstimator):
                     "Using metric without a distance func; transform will be unavailable for new data"
                 )
 
-            if self.metric != "precomputed":
+            if self.metric != "precomputed" and not self.use_nmslib:
                 self._dist_args = tuple(
                     self._metric_kwds.values()
                 )
