@@ -1636,7 +1636,15 @@ class UMAP(BaseEstimator):
             # Standard case
             if self.use_nmslib:
                     import  nmslib
-                    index = nmslib.init(method='hnsw', space=self.metric)
+                    if self.metric == 'euclidean':
+                        metric = 'l2'
+                    elif self.metric == 'manhattan'
+                        metric = 'l1'
+                    elif self.metric == 'cosine':
+                        metric = 'cosinesimil'
+                    else:
+                        metric = self.metric
+                    index = nmslib.init(method='hnsw', space=metric)
                     index.addDataPointBatch(X)
                     index.createIndex(self.nmslib_params, print_progress=False)
                     neighbors = index.knnQueryBatch(X, k=self._n_neighbors, num_threads=self.nmslib_num_threads)
