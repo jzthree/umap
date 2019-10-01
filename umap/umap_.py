@@ -1638,7 +1638,7 @@ class UMAP(BaseEstimator):
                     import  nmslib
                     if self.metric == 'euclidean':
                         metric = 'l2'
-                    elif self.metric == 'manhattan'
+                    elif self.metric == 'manhattan':
                         metric = 'l1'
                     elif self.metric == 'cosine':
                         metric = 'cosinesimil'
